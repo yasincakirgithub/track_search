@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Track</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+
+    <!-- Adminlte CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css"
+          integrity="sha512-IuO+tczf4J43RzbCMEFggCWW5JuX78IrCJRFFBoQEXNvGI6gkUw4OjuwMidiS4Lm9Q2lILzpJwZuMWuSEeT9UQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+    <!-- Fontawesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+</head>
+<body>
+
+<div class="container my-4">
+    <div class="row justify-content-center">
+
+        <div class="col-md-10">
+            <h2 class="text-center">Track Search</h2>
+        </div>
+
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <form id="formTrackSearch">
+                        <div class="input-group mb-3">
+                            <input required id="searchTrackInput" type="text" class="form-control"
+                                   placeholder="Please Enter Your Genre pop,rock ex.">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                    <table class="table table-bordered" id="trackTable">
+                        <thead>
+                        <tr>
+                            <th>Album Image</th>
+                            <th>Track</th>
+                            <th>Artist</th>
+                            <th>Preview</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div style="display: none" id="cardOverlay" class="overlay">
+                    <i class="fas fa-2x fa-sync-alt fa-spin"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
+<!-- Adminlte JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"
+        integrity="sha512-KBeR1NhClUySj9xBB0+KRqYLPkM6VvXiiWaSz/8LCQNdRpUm38SWUrj0ccNDNSkwCD9qPA4KobLliG26yPppJA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- Sweat Alert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+    function show_loading_containerOverlay() {
+        $('#cardOverlay').css('display', '')
+    }
+
+    function hide_loading_containerOverlay() {
+        $('#cardOverlay').css('display', 'none')
+    }
+</script>
+
+<script>
+
+    var track_table;
+    var form_track_search = $('#formTrackSearch');
+
+    $(document).ready(function () {
+        track_table = $('#trackTable').DataTable({
+            'paginate': false
+        });
+    });
+
+    form_track_search.submit(function (event) {
+        event.preventDefault();
+
+        show_loading_containerOverlay()
+        track_table.clear().draw();
+
+        var genre = $('#searchTrackInput').val()
+        var url = "{% url 'get-track-list' genre='pop' %}".replace(/pop/, genre);
+
+        $.ajax({
+            method: "GET",
+            url: url
+        })
+        .done(function (res) {
+
+            $.each(res, function (index, data) {
+                track_table.row.add([
+                    `<img width="100px" src="${data.album_image_url}">`,
+                    data.track,
+                    data.artist,
+                    `<a target="_blank" href="${data.preview_url}"><i class="fa-solid fa-ear-listen"></i> Preview</a>`
+                ]).draw()
+            });
+
+            hide_loading_containerOverlay()
+        })
+        .fail(function () {
+
+            Swal.fire({
+                title: 'Error!',
+                icon: 'error',
+                confirmButtonText: 'Close'
+            })
+
+        })
+
+    })
+
+
+</script>
+
+</body>
+</html>
